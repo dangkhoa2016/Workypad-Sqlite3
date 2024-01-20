@@ -7,6 +7,7 @@ unless Source.any?
 end
 
 user = User.find_by_email('test@example.com') || create(:user, email: 'test@example.com', password: 'password')
+puts user
 
 20.times do
   job = create(:job,

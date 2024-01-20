@@ -11,29 +11,24 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.1].define(version: 2024_01_16_055901) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_trgm"
-  enable_extension "pgcrypto"
-  enable_extension "plpgsql"
-
   create_table "action_text_rich_texts", force: :cascade do |t|
     t.string "name", null: false
     t.text "body"
     t.string "record_type", null: false
+    t.bigint "record_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.uuid "record_id"
-    t.integer "old_record_id"
+    t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
+    t.bigint "record_id", null: false
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
-    t.integer "old_record_id"
-    t.bigint "record_id"
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
 
   create_table "active_storage_blobs", force: :cascade do |t|
@@ -55,7 +50,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_16_055901) do
   end
 
   create_table "feedbacks", force: :cascade do |t|
-    t.bigint "user_id", null: false
+    t.integer "user_id", null: false
     t.text "content"
     t.integer "status", default: 1
     t.datetime "created_at", null: false
@@ -64,8 +59,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_16_055901) do
     t.index ["user_id"], name: "index_feedbacks_on_user_id"
   end
 
-  create_table "jobs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.bigint "user_id"
+  create_table "jobs", force: :cascade do |t|
+    t.integer "user_id"
     t.string "entity"
     t.string "title"
     t.string "url"
@@ -84,36 +79,34 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_16_055901) do
     t.integer "arrangement"
     t.string "entity_url"
     t.string "agency"
-    t.integer "old_id"
     t.boolean "is_favorite"
-    t.index ["agency"], name: "index_jobs_on_agency", opclass: :gin_trgm_ops, using: :gin
-    t.index ["entity"], name: "index_jobs_on_entity", opclass: :gin_trgm_ops, using: :gin
-    t.index ["primary_contact_name"], name: "index_jobs_on_primary_contact_name", opclass: :gin_trgm_ops, using: :gin
-    t.index ["title"], name: "index_jobs_on_title", opclass: :gin_trgm_ops, using: :gin
+    t.index ["agency"], name: "index_jobs_on_agency"
+    t.index ["entity"], name: "index_jobs_on_entity"
+    t.index ["primary_contact_name"], name: "index_jobs_on_primary_contact_name"
+    t.index ["title"], name: "index_jobs_on_title"
     t.index ["user_id", "order"], name: "index_jobs_on_user_id_and_order"
     t.index ["user_id"], name: "index_jobs_on_user_id"
   end
 
   create_table "notes", force: :cascade do |t|
+    t.integer "job_id", null: false
     t.text "content"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "category", default: 100
-    t.integer "old_job_id"
-    t.uuid "job_id"
+    t.index ["job_id"], name: "index_notes_on_job_id"
   end
 
   create_table "reminders", force: :cascade do |t|
-    t.uuid "job_id"
+    t.integer "job_id"
     t.datetime "remind_at"
     t.integer "way", null: false
-    t.boolean "is_dismissed", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
   create_table "settings", force: :cascade do |t|
-    t.bigint "user_id"
+    t.integer "user_id"
     t.integer "days_to_auto_archive", default: 21, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -142,4 +135,5 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_16_055901) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "feedbacks", "users"
+  add_foreign_key "notes", "jobs"
 end
